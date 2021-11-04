@@ -1,4 +1,4 @@
-// Copyright (C) 2021 The Tracer Authors.
+// Copyright (C) 2021 The libbpf-async Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.

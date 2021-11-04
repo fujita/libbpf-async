@@ -17,7 +17,6 @@ struct {
 
 SEC("uretprobe/triger_func")
 int printret(struct pt_regs *ctx) {
-    bpf_printk("printret entered");
     struct str_t data  = {};
     char comm[TASK_COMM_LEN] = {};
     u32 pid;
