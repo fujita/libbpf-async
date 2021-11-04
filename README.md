@@ -28,4 +28,4 @@ async fn main() {
 }
 ```
 
-A working example code can be found [here](http::/github.com/fujita/libbpf-async/examples).
+A working example code can be found [here](https://github.com/fujita/libbpf-async/tree/master/examples).
