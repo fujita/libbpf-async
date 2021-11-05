@@ -2,6 +2,7 @@
 name = "libbpf-async"
 version = "0.1.0"
 edition = "2021"
+description = "library for writing BPF programs in Async Rust, complementary for libbpf-rs"
 license = "Apache-2.0"
 repository = "https://github.com/fujita/libbpf-async"
 homepage = "https://github.com/fujita/libbpf-async"
