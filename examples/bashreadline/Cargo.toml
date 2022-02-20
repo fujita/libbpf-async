@@ -7,8 +7,7 @@ edition = "2021"
 
 [dependencies]
 object = { version = "0.27.0", features = ["elf"] }
-libbpf-rs = "0.14"
-libbpf-sys = "0.5.0-2"
+libbpf-rs = "0.16"
 plain = "0.2"
 chrono = "0.4"
 tokio = { version = "1.10", features = ["full"] }
