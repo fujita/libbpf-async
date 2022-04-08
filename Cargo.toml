@@ -1,3 +1,3 @@
 [workspace]
 
-members = ["libbpf-async", "examples/bashreadline"]
+members = ["libbpf-async", "examples/bashreadline", "examples/profiler"]
