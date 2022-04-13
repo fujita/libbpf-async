@@ -26,12 +26,9 @@ int do_perf_event(struct bpf_perf_event_data *ctx)
 	int ret;
 	struct Stack *stack;
 
-	u64 id = bpf_get_current_pid_tgid();
-	u32 tgid = id >> 32;
-	u32 *val;
+	u32 tgid = bpf_get_current_pid_tgid() >> 32;
 
-	val = bpf_map_lookup_elem(&hmap, &tgid);
-	if (!val) {
+	if (!bpf_map_lookup_elem(&hmap, &tgid)) {
 		return 0;
 	}
 
@@ -47,7 +44,6 @@ int do_perf_event(struct bpf_perf_event_data *ctx)
 		return 0;
 	}
 	bpf_ringbuf_submit(stack, 0);
-
 	return 0;
 }
 
