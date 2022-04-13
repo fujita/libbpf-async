@@ -41,7 +41,7 @@ OPTIONS:
 55f6a6116501 std::rt::lang_start_internal
 ```
 
-##　Caveat
+## Caveat
 
 `bpf_get_stack()` needs frame pointers. You need to compile a binary with the following option:
 
