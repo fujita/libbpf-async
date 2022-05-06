@@ -10,7 +10,7 @@ addr2line = "0.17"
 chrono = "0.4"
 clap = { version = "3.1.8", features = ["derive"] }
 libbpf-async = {path="../../libbpf-async"}
-libbpf-rs = "0.16"
+libbpf-rs = "0.17"
 nix = "0.23"
 num_cpus = "1.0"
 perf-event-open-sys = "1"
