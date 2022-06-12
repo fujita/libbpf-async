@@ -29,3 +29,7 @@ async fn main() {
 ```
 
 A working example code can be found [here](https://github.com/fujita/libbpf-async/tree/master/examples).
+
+## License
+
+This work is dual-licensed under BSD 2-clause license and GNU LGPL v2.1 license. You can choose between one of them if you use this work.
