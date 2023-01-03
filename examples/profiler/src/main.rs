@@ -12,8 +12,9 @@ use std::io::{BufRead, BufReader};
 use std::process::Command;
 use std::u64;
 
-#[path = "bpf/.output/profiler.skel.rs"]
-mod profiler;
+mod profiler {
+    include!(concat!(env!("OUT_DIR"), "/profiler.skel.rs"));
+}
 use profiler::*;
 
 const RINGBUF_NAME: &str = "rb";

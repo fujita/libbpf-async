@@ -1,6 +1,6 @@
-use std::fs::create_dir_all;
+use std::env;
 use std::io::Write;
-use std::path::Path;
+use std::path::PathBuf;
 use std::process::Command;
 
 use libbpf_cargo::SkeletonBuilder;
@@ -20,16 +20,9 @@ fn main() {
     let mut f = std::fs::File::create("./src/bpf/vmlinux.h").unwrap();
     f.write_all(&output.stdout).unwrap();
 
-    // It's unfortunate we cannot use `OUT_DIR` to store the generated skeleton.
-    // Reasons are because the generated skeleton contains compiler attributes
-    // that cannot be `include!()`ed via macro. And we cannot use the `#[path = "..."]`
-    // trick either because you cannot yet `concat!(env!("OUT_DIR"), "/skel.rs")` inside
-    // the path attribute either (see https://github.com/rust-lang/rust/pull/83366).
-    //
-    // However, there is hope! When the above feature stabilizes we can clean this
-    // all up.
-    create_dir_all("./src/bpf/.output").unwrap();
-    let skel = Path::new("./src/bpf/.output/bashreadline.skel.rs");
+    let mut skel =
+        PathBuf::from(env::var_os("OUT_DIR").expect("OUT_DIR must be set in build script"));
+    skel.push("bashreadline.skel.rs");
     SkeletonBuilder::new()
         .source(SRC)
         .build_and_generate(&skel)

@@ -9,8 +9,9 @@ use plain::Plain;
 use std::fs;
 use tokio::io::AsyncReadExt;
 
-#[path = "bpf/.output/bashreadline.skel.rs"]
-mod bashreadline;
+mod bashreadline {
+    include!(concat!(env!("OUT_DIR"), "/bashreadline.skel.rs"));
+}
 use bashreadline::*;
 
 const BINARY_NAME: &str = "/bin/bash";
