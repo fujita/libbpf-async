@@ -57,7 +57,7 @@ impl RingBuffer {
             async_fd: AsyncFd::with_interest(map.fd(), tokio::io::Interest::READABLE).unwrap(),
             consumer,
             producer,
-            data: unsafe { producer.offset(psize as isize) },
+            data: unsafe { producer.add(psize) },
         }
     }
 

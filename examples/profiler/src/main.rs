@@ -165,7 +165,7 @@ fn main() {
             if object.starts_with('[') {
                 continue;
             }
-            let entry = memmaps.entry(object).or_insert(Vec::new());
+            let entry = memmaps.entry(object).or_default();
             let range: Vec<&str> = v[0].split('-').collect();
             let start = u64::from_str_radix(range[0], 16).unwrap();
             let end = u64::from_str_radix(range[1], 16).unwrap();
