@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 object = { version = "0.27.0", features = ["elf"] }
-libbpf-rs = "0.17"
+libbpf-rs = "0.19"
 plain = "0.2"
 chrono = "0.4"
 tokio = { version = "1.19", features = ["full"] }
@@ -15,4 +15,4 @@ libbpf-async = {path="../../libbpf-async"}
 rlimit = "0.6"
 
 [build-dependencies]
-libbpf-cargo = "0.9"
+libbpf-cargo = "0.13"

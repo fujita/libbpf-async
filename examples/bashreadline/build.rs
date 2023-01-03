@@ -5,7 +5,7 @@ use std::process::Command;
 
 use libbpf_cargo::SkeletonBuilder;
 
-const SRC: &str = "./src/bpf/bashreadline.bpf.c";
+const SRC: &str = "src/bpf/bashreadline.bpf.c";
 
 fn main() {
     let output = Command::new("bpftool")
@@ -30,6 +30,9 @@ fn main() {
     // all up.
     create_dir_all("./src/bpf/.output").unwrap();
     let skel = Path::new("./src/bpf/.output/bashreadline.skel.rs");
-    SkeletonBuilder::new(SRC).generate(&skel).unwrap();
+    SkeletonBuilder::new()
+        .source(SRC)
+        .build_and_generate(&skel)
+        .unwrap();
     println!("cargo:rerun-if-changed={}", SRC);
 }
