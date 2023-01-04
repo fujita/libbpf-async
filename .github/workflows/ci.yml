@@ -1,0 +1,32 @@
+name: ci
+
+on: [pull_request]
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: checking out
+        uses: actions/checkout@v3
+        with:
+          path: libbpf-async
+      - name: checking out libbpf
+        uses: actions/checkout@v3
+        with:
+          repository: libbpf/libbpf
+          path: libbpf
+      - name: build libbpf
+        working-directory: libbpf
+        run: |
+          sudo apt-get -y install debhelper-compat libelf-dev zlib1g-dev pkg-config
+          cd src
+          sudo make install
+      - name: build
+        working-directory: libbpf-async
+        run: |
+          rustup component add rustfmt --toolchain stable-x86_64-unknown-linux-gnu
+          rustup component add clippy
+          cargo clippy -- -D warnings
+          cargo test --verbose --all
+          cargo fmt -- --check
