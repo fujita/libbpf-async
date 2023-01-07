@@ -16,7 +16,7 @@ num_cpus = "1.0"
 perf-event-open-sys = "1"
 plain = "0.2"
 rlimit = "0.6"
-tokio = { version = "1.19", features = ["full"] }
+tokio = { version = "1.24", features = ["full"] }
 
 [build-dependencies]
 libbpf-cargo = "0.13"

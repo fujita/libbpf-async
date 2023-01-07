@@ -14,6 +14,6 @@ keywords = ["bpf", "libbpf", "async"]
 [dependencies]
 libbpf-rs = "0.19"
 nix = "0.22"
-tokio = { version = "1.19", features = ["full"] }
+tokio = { version = "1.24", features = ["full"] }
 page_size = "0.4"
 futures = "0.3"
