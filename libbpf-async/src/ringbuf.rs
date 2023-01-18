@@ -107,16 +107,8 @@ impl AsyncRead for RingBuffer {
                                 len as usize,
                             )
                         };
-                        unsafe {
-                            let b = &mut *(buf.unfilled_mut() as *mut [std::mem::MaybeUninit<u8>]
-                                as *mut [u8]);
-                            len = std::cmp::min(len, buf.capacity() as u32);
-                            for i in 0..len {
-                                b[i as usize] = sample[i as usize];
-                            }
-                            buf.assume_init(len as usize);
-                            buf.advance(len as usize);
-                        }
+                        len = std::cmp::min(len, buf.capacity() as u32);
+                        buf.put_slice(&sample[..len as usize]);
                     }
                     std::sync::atomic::fence(std::sync::atomic::Ordering::SeqCst);
                     unsafe {
