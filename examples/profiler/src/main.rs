@@ -177,7 +177,7 @@ fn main() {
 
     let mut range = Vec::new();
     for (obj, r) in memmaps {
-        let bin_data = fs::read(&obj).expect("failed to read");
+        let bin_data = fs::read(obj).expect("failed to read");
 
         if let Ok(ctx) = addr2line::Context::new(
             &addr2line::object::read::File::parse(&*bin_data).expect("failed to parse elf"),
