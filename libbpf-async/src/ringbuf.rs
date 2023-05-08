@@ -5,6 +5,7 @@
 use core::task::{Context, Poll};
 use libbpf_rs::query::MapInfoIter;
 use std::io::Result;
+use std::num::NonZeroUsize;
 use std::os::unix::io::RawFd;
 use tokio::io::unix::AsyncFd;
 use tokio::io::{AsyncRead, ReadBuf};
@@ -32,8 +33,8 @@ impl RingBuffer {
         let psize = page_size::get();
         let consumer = unsafe {
             nix::sys::mman::mmap(
-                std::ptr::null_mut(),
-                psize,
+                None,
+                NonZeroUsize::new(psize).expect("page size must not be zero"),
                 nix::sys::mman::ProtFlags::PROT_WRITE | nix::sys::mman::ProtFlags::PROT_READ,
                 nix::sys::mman::MapFlags::MAP_SHARED,
                 map.fd(),
@@ -43,8 +44,9 @@ impl RingBuffer {
         };
         let producer = unsafe {
             nix::sys::mman::mmap(
-                std::ptr::null_mut(),
-                psize + 2 * max_entries as usize,
+                None,
+                NonZeroUsize::new(psize + 2 * max_entries as usize)
+                    .expect("page size + 2 * max_entries must not be zero"),
                 nix::sys::mman::ProtFlags::PROT_READ,
                 nix::sys::mman::MapFlags::MAP_SHARED,
                 map.fd(),

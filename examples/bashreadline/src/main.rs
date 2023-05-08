@@ -67,7 +67,7 @@ async fn main() {
         .attach_uprobe(true, -1, BINARY_NAME, offset as usize)
         .unwrap();
 
-    let mut rb = libbpf_async::RingBuffer::new(skel.obj.map_mut(RINGBUF_NAME).unwrap());
+    let mut rb = libbpf_async::RingBuffer::new(skel.obj.map(RINGBUF_NAME).unwrap());
     println!("TIME      PID    COMMAND");
     loop {
         let mut buf = [0; 128];

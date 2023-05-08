@@ -116,8 +116,8 @@ fn main() {
     for cpu in 0..num_cpus::get() {
         let mut attrs = sys::bindings::perf_event_attr {
             size: std::mem::size_of::<sys::bindings::perf_event_attr>() as u32,
-            type_: sys::bindings::perf_type_id_PERF_TYPE_SOFTWARE,
-            config: sys::bindings::perf_sw_ids_PERF_COUNT_SW_CPU_CLOCK as u64,
+            type_: sys::bindings::PERF_TYPE_SOFTWARE,
+            config: sys::bindings::PERF_COUNT_SW_CPU_CLOCK as u64,
             __bindgen_anon_1: sys::bindings::perf_event_attr__bindgen_ty_1 { sample_freq: 99 },
             ..Default::default()
         };
@@ -207,7 +207,7 @@ fn main() {
     rt.block_on(async move {
         use tokio::io::AsyncReadExt;
 
-        let mut rb = libbpf_async::RingBuffer::new(skel.obj.map_mut(RINGBUF_NAME).unwrap());
+        let mut rb = libbpf_async::RingBuffer::new(skel.obj.map(RINGBUF_NAME).unwrap());
         loop {
             let mut buf = [0; std::mem::size_of::<Stack>()];
             let n = rb.read(&mut buf).await.unwrap();
