@@ -6,7 +6,7 @@ use core::task::{Context, Poll};
 use libbpf_rs::query::MapInfoIter;
 use std::io::Result;
 use std::num::NonZeroUsize;
-use std::os::unix::io::RawFd;
+use std::os::unix::io::{AsRawFd, BorrowedFd, OwnedFd};
 use tokio::io::unix::AsyncFd;
 use tokio::io::{AsyncRead, ReadBuf};
 
@@ -16,7 +16,7 @@ const BPF_RINGBUF_HDR_SZ: u32 = 8;
 
 pub struct RingBuffer {
     mask: u64,
-    async_fd: AsyncFd<RawFd>,
+    async_fd: AsyncFd<OwnedFd>,
     consumer: *mut core::ffi::c_void,
     producer: *mut core::ffi::c_void,
     data: *mut core::ffi::c_void,
@@ -24,20 +24,25 @@ pub struct RingBuffer {
 
 impl RingBuffer {
     pub fn new(map: &libbpf_rs::Map) -> Self {
+        // Borrowing this FD is safe: libbpf-rs returns only valid FDs and this borrow won't outlive the map reference
+        let original_map_fd = unsafe { BorrowedFd::borrow_raw(map.fd()) };
+        let map_fd = original_map_fd
+            .try_clone_to_owned()
+            .expect("Failed to duplicate FD");
         let mut max_entries = 0;
         for m in MapInfoIter::default() {
             if m.name == map.name() {
                 max_entries = m.max_entries;
             }
         }
-        let psize = page_size::get();
+        let psize = NonZeroUsize::new(page_size::get()).expect("page size must not be zero");
         let consumer = unsafe {
             nix::sys::mman::mmap(
                 None,
-                NonZeroUsize::new(psize).expect("page size must not be zero"),
+                psize,
                 nix::sys::mman::ProtFlags::PROT_WRITE | nix::sys::mman::ProtFlags::PROT_READ,
                 nix::sys::mman::MapFlags::MAP_SHARED,
-                map.fd(),
+                map_fd.as_raw_fd(),
                 0,
             )
             .unwrap()
@@ -45,22 +50,22 @@ impl RingBuffer {
         let producer = unsafe {
             nix::sys::mman::mmap(
                 None,
-                NonZeroUsize::new(psize + 2 * max_entries as usize)
-                    .expect("page size + 2 * max_entries must not be zero"),
+                psize.saturating_add((2 * max_entries) as usize),
                 nix::sys::mman::ProtFlags::PROT_READ,
                 nix::sys::mman::MapFlags::MAP_SHARED,
-                map.fd(),
-                psize as i64,
+                map_fd.as_raw_fd(),
+                psize.get() as i64,
             )
             .unwrap()
         };
 
+        let async_fd = AsyncFd::with_interest(map_fd, tokio::io::Interest::READABLE).unwrap();
         RingBuffer {
             mask: (max_entries - 1) as u64,
-            async_fd: AsyncFd::with_interest(map.fd(), tokio::io::Interest::READABLE).unwrap(),
+            async_fd,
             consumer,
             producer,
-            data: unsafe { producer.add(psize) },
+            data: unsafe { producer.add(psize.get()) },
         }
     }
 
