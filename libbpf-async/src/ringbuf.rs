@@ -3,10 +3,9 @@
 // Licensed under LGPL-2.1 or BSD-2-Clause.
 
 use core::task::{Context, Poll};
-use libbpf_rs::query::MapInfoIter;
 use std::io::Result;
 use std::num::NonZeroUsize;
-use std::os::fd::{AsFd, AsRawFd, BorrowedFd};
+use std::os::fd::{AsFd, AsRawFd, RawFd};
 use tokio::io::unix::AsyncFd;
 use tokio::io::{AsyncRead, ReadBuf};
 
@@ -14,30 +13,26 @@ const BPF_RINGBUF_BUSY_BIT: u32 = 1 << 31;
 const BPF_RINGBUF_DISCARD_BIT: u32 = 1 << 30;
 const BPF_RINGBUF_HDR_SZ: u32 = 8;
 
-pub struct RingBuffer<'a> {
+pub struct RingBuffer {
     mask: u64,
-    async_fd: AsyncFd<BorrowedFd<'a>>,
+    async_fd: AsyncFd<RawFd>,
     consumer: *mut core::ffi::c_void,
     producer: *mut core::ffi::c_void,
     data: *mut core::ffi::c_void,
 }
 
-impl<'a> RingBuffer<'a> {
-    pub fn new(map: &'a libbpf_rs::Map) -> Self {
-        let mut max_entries = 0;
-        for m in MapInfoIter::default() {
-            if m.name == map.name() {
-                max_entries = m.max_entries;
-            }
-        }
+impl RingBuffer {
+    pub fn new(map_handle: &libbpf_rs::MapHandle) -> Self {
+        let max_entries = map_handle.info().unwrap().info.max_entries;
         let psize = page_size::get();
+        let fd = map_handle.as_fd().as_raw_fd();
         let consumer = unsafe {
             nix::sys::mman::mmap(
                 None,
                 NonZeroUsize::new(psize).expect("page size must not be zero"),
                 nix::sys::mman::ProtFlags::PROT_WRITE | nix::sys::mman::ProtFlags::PROT_READ,
                 nix::sys::mman::MapFlags::MAP_SHARED,
-                map.as_fd().as_raw_fd(),
+                fd,
                 0,
             )
             .unwrap()
@@ -49,7 +44,7 @@ impl<'a> RingBuffer<'a> {
                     .expect("page size + 2 * max_entries must not be zero"),
                 nix::sys::mman::ProtFlags::PROT_READ,
                 nix::sys::mman::MapFlags::MAP_SHARED,
-                map.as_fd().as_raw_fd(),
+                fd,
                 psize as i64,
             )
             .unwrap()
@@ -57,7 +52,7 @@ impl<'a> RingBuffer<'a> {
 
         RingBuffer {
             mask: (max_entries - 1) as u64,
-            async_fd: AsyncFd::with_interest(map.as_fd(), tokio::io::Interest::READABLE).unwrap(),
+            async_fd: AsyncFd::with_interest(fd, tokio::io::Interest::READABLE).unwrap(),
             consumer,
             producer,
             data: unsafe { producer.add(psize) },
@@ -72,7 +67,7 @@ impl<'a> RingBuffer<'a> {
     }
 }
 
-impl Drop for RingBuffer<'_> {
+impl Drop for RingBuffer {
     fn drop(&mut self) {
         let psize = page_size::get();
         unsafe {
@@ -82,7 +77,7 @@ impl Drop for RingBuffer<'_> {
     }
 }
 
-impl AsyncRead for RingBuffer<'_> {
+impl AsyncRead for RingBuffer {
     fn poll_read(
         self: core::pin::Pin<&mut Self>,
         cx: &mut Context<'_>,
