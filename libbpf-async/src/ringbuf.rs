@@ -6,7 +6,7 @@ use core::task::{Context, Poll};
 use libbpf_rs::query::MapInfoIter;
 use std::io::Result;
 use std::num::NonZeroUsize;
-use std::os::unix::io::RawFd;
+use std::os::fd::{AsFd, AsRawFd, BorrowedFd};
 use tokio::io::unix::AsyncFd;
 use tokio::io::{AsyncRead, ReadBuf};
 
@@ -14,16 +14,16 @@ const BPF_RINGBUF_BUSY_BIT: u32 = 1 << 31;
 const BPF_RINGBUF_DISCARD_BIT: u32 = 1 << 30;
 const BPF_RINGBUF_HDR_SZ: u32 = 8;
 
-pub struct RingBuffer {
+pub struct RingBuffer<'a> {
     mask: u64,
-    async_fd: AsyncFd<RawFd>,
+    async_fd: AsyncFd<BorrowedFd<'a>>,
     consumer: *mut core::ffi::c_void,
     producer: *mut core::ffi::c_void,
     data: *mut core::ffi::c_void,
 }
 
-impl RingBuffer {
-    pub fn new(map: &libbpf_rs::Map) -> Self {
+impl<'a> RingBuffer<'a> {
+    pub fn new(map: &'a libbpf_rs::Map) -> Self {
         let mut max_entries = 0;
         for m in MapInfoIter::default() {
             if m.name == map.name() {
@@ -37,7 +37,7 @@ impl RingBuffer {
                 NonZeroUsize::new(psize).expect("page size must not be zero"),
                 nix::sys::mman::ProtFlags::PROT_WRITE | nix::sys::mman::ProtFlags::PROT_READ,
                 nix::sys::mman::MapFlags::MAP_SHARED,
-                map.fd(),
+                map.as_fd().as_raw_fd(),
                 0,
             )
             .unwrap()
@@ -49,7 +49,7 @@ impl RingBuffer {
                     .expect("page size + 2 * max_entries must not be zero"),
                 nix::sys::mman::ProtFlags::PROT_READ,
                 nix::sys::mman::MapFlags::MAP_SHARED,
-                map.fd(),
+                map.as_fd().as_raw_fd(),
                 psize as i64,
             )
             .unwrap()
@@ -57,7 +57,7 @@ impl RingBuffer {
 
         RingBuffer {
             mask: (max_entries - 1) as u64,
-            async_fd: AsyncFd::with_interest(map.fd(), tokio::io::Interest::READABLE).unwrap(),
+            async_fd: AsyncFd::with_interest(map.as_fd(), tokio::io::Interest::READABLE).unwrap(),
             consumer,
             producer,
             data: unsafe { producer.add(psize) },
@@ -72,7 +72,7 @@ impl RingBuffer {
     }
 }
 
-impl Drop for RingBuffer {
+impl Drop for RingBuffer<'_> {
     fn drop(&mut self) {
         let psize = page_size::get();
         unsafe {
@@ -82,7 +82,7 @@ impl Drop for RingBuffer {
     }
 }
 
-impl AsyncRead for RingBuffer {
+impl AsyncRead for RingBuffer<'_> {
     fn poll_read(
         self: core::pin::Pin<&mut Self>,
         cx: &mut Context<'_>,

@@ -12,7 +12,7 @@ keywords = ["bpf", "libbpf", "async"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-libbpf-rs = "0.20.1"
+libbpf-rs = "0.21"
 nix = "0.26.2"
 tokio = { version = "1.24", features = ["full"] }
 page_size = "0.5.0"
