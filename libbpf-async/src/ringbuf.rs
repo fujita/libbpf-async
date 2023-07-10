@@ -21,6 +21,8 @@ pub struct RingBuffer {
     data: *mut core::ffi::c_void,
 }
 
+unsafe impl Send for RingBuffer {}
+
 impl RingBuffer {
     pub fn new(map_handle: &libbpf_rs::MapHandle) -> Self {
         let max_entries = map_handle.info().unwrap().info.max_entries;
