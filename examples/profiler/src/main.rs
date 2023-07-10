@@ -4,11 +4,13 @@
 
 use chrono::Utc;
 use clap::Parser;
+use libbpf_rs::skel::{OpenSkel, SkelBuilder};
 use perf_event_open_sys as sys;
 use plain::Plain;
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader};
+use std::os::fd::{AsFd, AsRawFd};
 use std::process::Command;
 use std::u64;
 
@@ -110,7 +112,7 @@ fn main() {
         builder.obj_builder.debug(true);
     }
     let mut skel = builder.open().unwrap().load().unwrap();
-    let prog_fd = skel.obj.prog("do_perf_event").unwrap().fd();
+    let prog_fd = skel.obj.prog("do_perf_event").unwrap().as_fd().as_raw_fd();
     let hmap = skel.obj.map_mut("hmap").unwrap();
 
     for cpu in 0..num_cpus::get() {
