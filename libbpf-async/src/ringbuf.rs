@@ -3,10 +3,10 @@
 // Licensed under LGPL-2.1 or BSD-2-Clause.
 
 use core::task::{Context, Poll};
-use libbpf_rs::query::MapInfoIter;
+use libbpf_rs::{query::MapInfoIter, Map};
 use std::io::Result;
 use std::num::NonZeroUsize;
-use std::os::unix::io::RawFd;
+use std::os::fd::{AsFd, AsRawFd, RawFd};
 use tokio::io::unix::AsyncFd;
 use tokio::io::{AsyncRead, ReadBuf};
 
@@ -23,7 +23,7 @@ pub struct RingBuffer {
 }
 
 impl RingBuffer {
-    pub fn new(map: &libbpf_rs::Map) -> Self {
+    pub fn new(map: &Map) -> Self {
         let mut max_entries = 0;
         for m in MapInfoIter::default() {
             if m.name == map.name() {
@@ -31,13 +31,14 @@ impl RingBuffer {
             }
         }
         let psize = page_size::get();
+        let fd = map.as_fd().as_raw_fd();
         let consumer = unsafe {
             nix::sys::mman::mmap(
                 None,
                 NonZeroUsize::new(psize).expect("page size must not be zero"),
                 nix::sys::mman::ProtFlags::PROT_WRITE | nix::sys::mman::ProtFlags::PROT_READ,
                 nix::sys::mman::MapFlags::MAP_SHARED,
-                map.fd(),
+                fd,
                 0,
             )
             .unwrap()
@@ -49,7 +50,7 @@ impl RingBuffer {
                     .expect("page size + 2 * max_entries must not be zero"),
                 nix::sys::mman::ProtFlags::PROT_READ,
                 nix::sys::mman::MapFlags::MAP_SHARED,
-                map.fd(),
+                fd,
                 psize as i64,
             )
             .unwrap()
@@ -57,7 +58,7 @@ impl RingBuffer {
 
         RingBuffer {
             mask: (max_entries - 1) as u64,
-            async_fd: AsyncFd::with_interest(map.fd(), tokio::io::Interest::READABLE).unwrap(),
+            async_fd: AsyncFd::with_interest(fd, tokio::io::Interest::READABLE).unwrap(),
             consumer,
             producer,
             data: unsafe { producer.add(psize) },

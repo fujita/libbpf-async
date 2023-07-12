@@ -3,6 +3,7 @@
 // Licensed under LGPL-2.1 or BSD-2-Clause.
 
 use chrono::prelude::*;
+use libbpf_rs::skel::{OpenSkel, SkelBuilder};
 use object::{Object, ObjectSymbol};
 use plain::Plain;
 use std::fs;

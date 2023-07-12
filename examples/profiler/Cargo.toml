@@ -10,7 +10,7 @@ addr2line = "0.17.0"
 chrono = "0.4"
 clap = { version = "4.2.7", features = ["derive"] }
 libbpf-async = { path = "../../libbpf-async" }
-libbpf-rs = "0.20.1"
+libbpf-rs = "0.21.1"
 nix = "0.26.2"
 num_cpus = "1.0"
 perf-event-open-sys = "4.0.0"
@@ -19,4 +19,4 @@ rlimit = "0.9.1"
 tokio = { version = "1.28", features = ["full"] }
 
 [build-dependencies]
-libbpf-cargo = "0.20.1"
+libbpf-cargo = "0.21.1"
