@@ -8,7 +8,7 @@ To use in your project, add into your `Cargo.toml`:
 
 ```toml
 [dependencies]
-libbpf-async = "0.1"
+libbpf-async = "0.2"
 ```
 
 ## Example
