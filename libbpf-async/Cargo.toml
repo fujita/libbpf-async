@@ -1,6 +1,6 @@
 [package]
 name = "libbpf-async"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "library for writing BPF programs in Async Rust, complementary for libbpf-rs"
 license = "LGPL-2.1 OR BSD-2-Clause"
